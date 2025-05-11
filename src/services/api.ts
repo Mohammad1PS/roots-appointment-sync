@@ -19,9 +19,9 @@ export interface Appointment {
 const GMAIL_EMAIL = "100ggking@gmail.com";
 
 // مفاتيح EmailJS - يجب تغييرها بالقيم الخاصة بك
-const EMAILJS_SERVICE_ID = "service_id"; // قم بتغيير هذا برقم الخدمة الخاصة بك
-const EMAILJS_TEMPLATE_ID = "template_id"; // قم بتغيير هذا برقم القالب الخاص بك
-const EMAILJS_USER_ID = "user_id"; // قم بتغيير هذا برقم المستخدم الخاص بك
+const EMAILJS_SERVICE_ID = "service_e91lbts"; // قم بتغيير هذا برقم الخدمة الخاصة بك
+const EMAILJS_TEMPLATE_ID = "template_4q7uxzv"; // قم بتغيير هذا برقم القالب الخاص بك
+const EMAILJS_USER_ID = "EfdBsOH1GpoAm7tP6"; // قم بتغيير هذا برقم المستخدم الخاص بك
 
 // استرداد المواعيد من التخزين المحلي
 export const fetchAppointments = (): Appointment[] => {
