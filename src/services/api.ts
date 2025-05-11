@@ -1,5 +1,6 @@
 
 import { toast } from "@/components/ui/use-toast";
+import emailjs from 'emailjs-com';
 
 export interface Appointment {
   id?: string;
@@ -16,6 +17,11 @@ export interface Appointment {
 
 // البريد الإلكتروني المستخدم للربط
 const GMAIL_EMAIL = "100ggking@gmail.com";
+
+// مفاتيح EmailJS - يجب تغييرها بالقيم الخاصة بك
+const EMAILJS_SERVICE_ID = "service_id"; // قم بتغيير هذا برقم الخدمة الخاصة بك
+const EMAILJS_TEMPLATE_ID = "template_id"; // قم بتغيير هذا برقم القالب الخاص بك
+const EMAILJS_USER_ID = "user_id"; // قم بتغيير هذا برقم المستخدم الخاص بك
 
 // استرداد المواعيد من التخزين المحلي
 export const fetchAppointments = (): Appointment[] => {
@@ -53,10 +59,18 @@ export const addAppointment = (appointment: Omit<Appointment, 'id' | 'status' | 
     appointments.push(newAppointment);
     saveAppointments(appointments);
     
-    // إرسال تنبيه بنجاح العملية
-    toast({
-      title: "تم تسجيل الموعد بنجاح",
-      description: `تم إرسال تفاصيل الموعد إلى ${GMAIL_EMAIL}`,
+    // إرسال إشعار بالبريد الإلكتروني (حقيقي)
+    sendEmailNotification(newAppointment).then(() => {
+      toast({
+        title: "تم تسجيل الموعد بنجاح",
+        description: `تم إرسال تفاصيل الموعد إلى ${GMAIL_EMAIL}`,
+      });
+    }).catch(() => {
+      toast({
+        variant: "destructive",
+        title: "تنبيه",
+        description: "تم حفظ الموعد ولكن فشل إرسال البريد الإلكتروني. سنقوم بالتواصل معك قريبًا."
+      });
     });
     
     return newAppointment;
@@ -83,6 +97,11 @@ export const updateAppointmentStatus = (id: string, status: 'pending' | 'confirm
     if (appointmentIndex !== -1) {
       appointments[appointmentIndex].status = status;
       saveAppointments(appointments);
+      
+      // إرسال تنبيه بالبريد الإلكتروني عن تغيير الحالة
+      const updatedAppointment = appointments[appointmentIndex];
+      const statusNote = `تم تغيير حالة الموعد إلى ${getStatusInArabic(status)}`;
+      sendStatusUpdateEmail(updatedAppointment, statusNote);
       
       // إرسال تنبيه بنجاح العملية
       toast({
@@ -111,10 +130,14 @@ export const updateAppointmentStatus = (id: string, status: 'pending' | 'confirm
 export const deleteAppointment = (id: string): boolean => {
   try {
     const appointments = fetchAppointments();
+    const appointment = appointments.find(app => app.id === id);
     const filteredAppointments = appointments.filter(app => app.id !== id);
     
-    if (appointments.length !== filteredAppointments.length) {
+    if (appointments.length !== filteredAppointments.length && appointment) {
       saveAppointments(filteredAppointments);
+      
+      // إرسال إشعار حذف بالبريد الإلكتروني
+      sendDeletionEmail(appointment);
       
       // إرسال تنبيه بنجاح العملية
       toast({
@@ -139,7 +162,7 @@ export const deleteAppointment = (id: string): boolean => {
   }
 };
 
-// تنسيق الموعد لإرساله بالبريد الإلكتروني (محاكاة)
+// تنسيق الموعد للعرض
 export const formatAppointmentForEmail = (appointment: Appointment): string => {
   return `
     موعد جديد في عيادة جذور لطب الأسنان
@@ -190,15 +213,142 @@ export const getStatusInArabic = (status: string): string => {
   return statusMap[status] || status;
 };
 
-// محاكاة إرسال بريد إلكتروني
+// إرسال إشعار بالبريد الإلكتروني لموعد جديد
 export const sendEmailNotification = (appointment: Appointment): Promise<boolean> => {
-  return new Promise((resolve) => {
-    console.log(`محاكاة إرسال بريد إلكتروني إلى ${GMAIL_EMAIL} بتفاصيل الموعد:`, appointment);
+  // تحضير معلومات البريد الإلكتروني
+  const emailParams = {
+    to_email: GMAIL_EMAIL,
+    to_name: "مسؤول العيادة",
+    from_name: "نظام المواعيد - عيادة جذور",
+    subject: "موعد جديد في العيادة",
+    message: formatAppointmentForEmail(appointment),
+    client_name: appointment.name,
+    client_phone: appointment.phone,
+    appointment_date: formatDate(appointment.date),
+    appointment_time: appointment.time,
+    appointment_service: getServiceName(appointment.service),
+    appointment_notes: appointment.notes || 'لا يوجد',
+  };
+
+  console.log("جاري محاولة إرسال بريد إلكتروني:", emailParams);
+  
+  // في الوضع التجريبي أو إذا لم تكن مفاتيح EmailJS متوفرة، نستخدم المحاكاة
+  if (
+    EMAILJS_SERVICE_ID === "service_id" || 
+    EMAILJS_TEMPLATE_ID === "template_id" || 
+    EMAILJS_USER_ID === "user_id"
+  ) {
+    console.log("تم استخدام محاكاة إرسال البريد الإلكتروني لأن مفاتيح EmailJS غير متوفرة");
+    console.log("محاكاة إرسال بريد إلكتروني إلى", GMAIL_EMAIL);
     console.log(formatAppointmentForEmail(appointment));
-    
-    // محاكاة تأخير في إرسال البريد الإلكتروني
-    setTimeout(() => {
-      resolve(true);
-    }, 1500);
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(true), 1500);
+    });
+  }
+
+  // استخدام EmailJS لإرسال بريد إلكتروني حقيقي
+  return emailjs.send(
+    EMAILJS_SERVICE_ID,
+    EMAILJS_TEMPLATE_ID,
+    emailParams,
+    EMAILJS_USER_ID
+  ).then(() => {
+    console.log("تم إرسال البريد الإلكتروني بنجاح");
+    return true;
+  }).catch((error) => {
+    console.error("خطأ في إرسال البريد الإلكتروني:", error);
+    throw error;
   });
 };
+
+// إرسال بريد إلكتروني لتحديث حالة الموعد
+export const sendStatusUpdateEmail = (appointment: Appointment, statusNote: string): Promise<boolean> => {
+  // تحضير معلومات تحديث الحالة
+  const emailParams = {
+    to_email: GMAIL_EMAIL,
+    to_name: "مسؤول العيادة",
+    from_name: "نظام المواعيد - عيادة جذور",
+    subject: "تحديث حالة موعد",
+    message: `
+      تحديث حالة موعد في عيادة جذور لطب الأسنان
+      ----------------------------------
+      الاسم: ${appointment.name}
+      رقم الهاتف: ${appointment.phone}
+      التاريخ: ${formatDate(appointment.date)}
+      الوقت: ${appointment.time}
+      الخدمة: ${getServiceName(appointment.service)}
+      التحديث: ${statusNote}
+      ----------------------------------
+    `,
+    client_name: appointment.name,
+    client_phone: appointment.phone,
+    appointment_date: formatDate(appointment.date),
+    appointment_time: appointment.time,
+    appointment_service: getServiceName(appointment.service),
+    status_update: statusNote,
+  };
+
+  // نفس المنطق السابق للإرسال
+  return simulateOrSendEmail(emailParams);
+};
+
+// إرسال بريد إلكتروني لحذف موعد
+export const sendDeletionEmail = (appointment: Appointment): Promise<boolean> => {
+  // تحضير معلومات الحذف
+  const emailParams = {
+    to_email: GMAIL_EMAIL,
+    to_name: "مسؤول العيادة",
+    from_name: "نظام المواعيد - عيادة جذور",
+    subject: "تم حذف موعد",
+    message: `
+      تم حذف موعد في عيادة جذور لطب الأسنان
+      ----------------------------------
+      الاسم: ${appointment.name}
+      رقم الهاتف: ${appointment.phone}
+      التاريخ: ${formatDate(appointment.date)}
+      الوقت: ${appointment.time}
+      الخدمة: ${getServiceName(appointment.service)}
+      ----------------------------------
+    `,
+    client_name: appointment.name,
+    client_phone: appointment.phone,
+    appointment_date: formatDate(appointment.date),
+    appointment_time: appointment.time,
+    appointment_service: getServiceName(appointment.service),
+  };
+
+  // نفس المنطق السابق للإرسال
+  return simulateOrSendEmail(emailParams);
+};
+
+// دالة مساعدة للتبديل بين المحاكاة والإرسال الحقيقي
+const simulateOrSendEmail = (emailParams: Record<string, string>): Promise<boolean> => {
+  // إذا كانت مفاتيح EmailJS غير متوفرة، استخدم المحاكاة
+  if (
+    EMAILJS_SERVICE_ID === "service_id" || 
+    EMAILJS_TEMPLATE_ID === "template_id" || 
+    EMAILJS_USER_ID === "user_id"
+  ) {
+    console.log("تم استخدام محاكاة إرسال البريد الإلكتروني لأن مفاتيح EmailJS غير متوفرة");
+    console.log("محاكاة إرسال بريد إلكتروني إلى", GMAIL_EMAIL);
+    console.log(emailParams.message);
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(true), 1500);
+    });
+  }
+
+  // استخدام EmailJS لإرسال بريد إلكتروني حقيقي
+  return emailjs.send(
+    EMAILJS_SERVICE_ID,
+    EMAILJS_TEMPLATE_ID,
+    emailParams,
+    EMAILJS_USER_ID
+  ).then(() => {
+    console.log("تم إرسال البريد الإلكتروني بنجاح");
+    return true;
+  }).catch((error) => {
+    console.error("خطأ في إرسال البريد الإلكتروني:", error);
+    throw error;
+  });
+};
+
