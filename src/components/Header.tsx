@@ -18,23 +18,35 @@ const Header = () => {
             <Logo />
           </Link>
           <nav className="hidden md:flex space-x-8 space-x-reverse">
-            <Link 
-              to="/" 
+            <a 
+              href="#home" 
               className="text-gray-700 hover:text-dental-primary px-3 py-2 text-lg font-medium"
             >
               الرئيسية
-            </Link>
+            </a>
+            <a 
+              href="#about" 
+              className="text-gray-700 hover:text-dental-primary px-3 py-2 text-lg font-medium"
+            >
+              من نحن
+            </a>
+            <a 
+              href="#services" 
+              className="text-gray-700 hover:text-dental-primary px-3 py-2 text-lg font-medium"
+            >
+              خدماتنا
+            </a>
+            <a 
+              href="#appointment" 
+              className="text-gray-700 hover:text-dental-primary px-3 py-2 text-lg font-medium"
+            >
+              حجز موعد
+            </a>
             <Link 
               to="/appointments" 
               className="text-gray-700 hover:text-dental-primary px-3 py-2 text-lg font-medium"
             >
               المواعيد
-            </Link>
-            <Link 
-              to="/new-appointment" 
-              className="text-gray-700 hover:text-dental-primary px-3 py-2 text-lg font-medium"
-            >
-              حجز موعد
             </Link>
           </nav>
           <div className="md:hidden">
@@ -48,26 +60,40 @@ const Header = () => {
         </div>
         {mobileMenuOpen && (
           <div className="md:hidden mt-3 pb-2">
-            <Link 
-              to="/" 
+            <a 
+              href="#home" 
               className="block text-gray-700 hover:text-dental-primary py-2 text-lg font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               الرئيسية
-            </Link>
+            </a>
+            <a 
+              href="#about" 
+              className="block text-gray-700 hover:text-dental-primary py-2 text-lg font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              من نحن
+            </a>
+            <a 
+              href="#services" 
+              className="block text-gray-700 hover:text-dental-primary py-2 text-lg font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              خدماتنا
+            </a>
+            <a 
+              href="#appointment" 
+              className="block text-gray-700 hover:text-dental-primary py-2 text-lg font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              حجز موعد
+            </a>
             <Link 
               to="/appointments" 
               className="block text-gray-700 hover:text-dental-primary py-2 text-lg font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               المواعيد
-            </Link>
-            <Link 
-              to="/new-appointment" 
-              className="block text-gray-700 hover:text-dental-primary py-2 text-lg font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              حجز موعد
             </Link>
           </div>
         )}

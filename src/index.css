@@ -101,6 +101,7 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Tajawal', sans-serif;
+    scroll-behavior: smooth;
   }
 }
 
@@ -116,3 +117,23 @@ html {
   margin-left: 0;
   margin-right: auto;
 }
+
+/* إضافة ستايلات جديدة للتصميم الأصلي */
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.service-icon {
+  transition: all 0.3s ease;
+}
+
+.service-card:hover .service-icon {
+  transform: scale(1.1);
+}
+
+/* نموذج المواعيد */
+.appointment-form input, .appointment-form select, .appointment-form textarea {
+  direction: rtl;
+}
+
